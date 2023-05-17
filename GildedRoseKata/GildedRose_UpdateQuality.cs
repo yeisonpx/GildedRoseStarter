@@ -15,26 +15,156 @@ namespace GildedRoseKata
         [Fact]
         public void DoesNothingGivenSulfuras()
         {
-            int initialQuality = 80;
+            //Arrange
+            var initialQuality = 80;
             var items = new List<Item> {
                                 new Item {Name = "Sulfuras, Hand of Ragnaros", SellIn = 0, Quality = initialQuality},
 
             };
-            var gildedRose = new GildedRose(items);
-            
-            gildedRose.UpdateQuality();
 
-            var firstItem = items.First();
-            
-            // Use your preferred assertion library (already included - pick one delete others)
-            // xunit default
-            Assert.Equal(initialQuality, firstItem.Quality);
+            //Act
+            ExecuteUpdateQuality(items);
 
-            // fluentassertions
-            firstItem.Quality.Should().Be(initialQuality);
-
-            // shouldly
-            firstItem.Quality.ShouldBe(initialQuality);
+            //Assert
+            ThenFirstItemIsEqualTo(items, initialQuality);
         }
+
+        [Fact]
+        public void GivenAPassedItem_ThenDegradesTwiceAsFast()
+        {
+            //Arrange
+            var initialQuality = 80;
+            var expectedValue = 78;
+            var items = new List<Item> {
+                new Item {Name = "Random Item", SellIn = 0, Quality = initialQuality},
+            };
+
+            //Act
+            ExecuteUpdateQuality(items);
+
+            //Assert
+            ThenFirstItemIsEqualTo(items, expectedValue);
+        }
+
+        [Fact]
+        public void GivenAgedBrie_ThenIncreaseTheQualityWithOne()
+        {
+            //Arrange
+            var initialQuality = 40;
+            var expectedValue = 41;
+            var items = new List<Item> {
+                new Item {Name = ItemNames.AgedBrie, SellIn = 10, Quality = initialQuality},
+            };
+
+            //Act
+            ExecuteUpdateQuality(items);
+
+            //Assert
+            ThenFirstItemIsEqualTo(items, expectedValue);
+        }
+
+
+        [Fact]
+        public void GivenBackstagePasses_With10DaysOrLess_ThenQualityIncreaseByTwo()
+        {
+            //Arrange
+            var initialQuality = 40;
+            var expectedValue = 42;
+            var items = new List<Item> {
+                new Item {Name = ItemNames.BackstagePasses, SellIn = 10, Quality = initialQuality},
+            };
+
+            //Act
+            ExecuteUpdateQuality(items);
+
+            //Assert
+            ThenFirstItemIsEqualTo(items, expectedValue);
+        }
+
+        [Fact]
+        public void GivenBackstagePasses_With5DaysOrLess_ThenQualityIncreaseByThree()
+        {
+            //Arrange
+            var initialQuality = 40;
+            var expectedValue = 43;
+            var items = new List<Item> {
+                new Item {Name = ItemNames.BackstagePasses, SellIn = 5, Quality = initialQuality},
+            };
+
+            //Act
+            ExecuteUpdateQuality(items);
+
+            //Assert
+            ThenFirstItemIsEqualTo(items, expectedValue);
+        }
+
+        [Fact]
+        public void GivenBackstagePasses_WithoutDaysLess_ThenDropsQualityToZero()
+        {
+
+            //Arrange
+            var initialQuality = 40;
+            var expectedValue = 0;
+            var items = new List<Item> {
+                new Item {Name = ItemNames.BackstagePasses, SellIn = 0, Quality = initialQuality},
+            };
+
+            //Act
+            ExecuteUpdateQuality(items);
+
+            //Assert
+            ThenFirstItemIsEqualTo(items, expectedValue);
+        }
+
+        [Fact]
+        public void GivenAPassedItemWithQualityZero_QualityIsNoNegative()
+        {
+            //Arrange
+            var initialQuality = 0;
+            var expectedValue = 0;
+            var items = new List<Item> {
+                new Item {Name = "Quality Zero Item", SellIn = 0, Quality = initialQuality},
+            };
+
+            //Act
+            ExecuteUpdateQuality(items);
+
+            //Assert
+            ThenFirstItemIsEqualTo(items, expectedValue);
+        }
+
+        [Fact]
+        public void GivenItemsThatIncreaseQuality_QualityIsNeverMoreThanFifty()
+        {
+            //Arrange
+            var initialQuality = 50;
+            var items = new List<Item> {
+                new Item {Name = ItemNames.AgedBrie, SellIn = 10, Quality = initialQuality},
+                new Item {Name = ItemNames.BackstagePasses, SellIn =5, Quality = initialQuality},
+            };
+
+            //Act
+            ExecuteUpdateQuality(items);
+
+            //Assert
+            items.Should().NotContain(item => item.Quality>50);
+        }
+
+        #region PrivateMethods
+
+        private void ExecuteUpdateQuality(List<Item> items)
+        {
+            var gildedRose = new GildedRose(items);
+            gildedRose.UpdateQuality();
+        }
+
+        private void ThenFirstItemIsEqualTo(List<Item> items, int expectedValue)
+        {
+            var item = items.First();
+            item.Quality.Should().Be(expectedValue);
+        }
+
+        #endregion
+
     }
 }
