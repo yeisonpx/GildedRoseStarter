@@ -32,6 +32,10 @@ public static class ItemExtensions
     
     public static bool IsSellByDateWithLessThan(this Item item, int days) =>  item.SellIn < days;
     public static bool IsProductSellByDatePassed(this Item item) => item.IsSellByDateWithLessThan(0);
+
+    public static bool IsProductSellByDatePassed(this Item item, string itemName) =>
+        item.IsSellByDateWithLessThan(0) && item.Name.Equals(itemName);
+    
     public static bool IsSpecialProduct(this Item item) => _SpecialProducts.Contains(item.Name);
     public static bool IsLegendaryProduct(this Item item) => _LegendaryProducts.Contains(item.Name);
     public static bool IsNormalProduct(this Item item) => !item.IsSpecialProduct() && item.Quality > 0;

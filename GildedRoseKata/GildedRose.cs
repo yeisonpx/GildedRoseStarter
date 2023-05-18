@@ -23,18 +23,24 @@ namespace GildedRoseKata
         {
             foreach (var item in Items)
             {
-                UpdateItem(item);
+               var updated = UpdateItem(item);
+               
+               item.Quality = updated.Quality;
+               item.SellIn = updated.SellIn;
             }
         }
 
-        private void UpdateItem(Item item)
+        private Item UpdateItem(Item item)
         {
-            UpdateProductQuality(item);
+            var updatedItem = item.Clone();
+            UpdateProductQuality(updatedItem);
 
-            if (!item.IsLegendaryProduct())
-                item.DecreaseSellIn();
+            if (!updatedItem.IsLegendaryProduct())
+                updatedItem.DecreaseSellIn();
 
-            UpdatePassedItem(item);
+            UpdatePassedItem(updatedItem);
+
+            return updatedItem;
         }
 
         private void UpdateProductQuality(Item item)
@@ -42,15 +48,10 @@ namespace GildedRoseKata
             if (item.IsNormalProduct())
                 item.DecreaseQuantity();
 
-            if (IsSpecialProductWithGoodQuality(item))
+            if (IsSpecialProductWithValidQuality(item))
                 item.IncreaseQuantity();
 
             UpdateBackstagePasses(item);
-        }
-
-        private bool IsSpecialProductWithGoodQuality(Item item)
-        {
-            return item.IsSpecialProduct() && item.Quality < _defaultMaxQuality;
         }
 
         private void UpdateBackstagePasses(Item item)
@@ -64,19 +65,24 @@ namespace GildedRoseKata
             if (item.IsSellByDateWithLessThan(_daysBackstagePassesDecreaseByThree))
                 item.IncreaseQuantity();
         }
-
-        private bool IsValidBackstagePasses(Item item) => item.Name == ItemNames.BackstagePasses && item.Quality < _defaultMaxQuality;
+        
         private void UpdatePassedItem(Item item)
         {
-            if (item.IsProductSellByDatePassed() && item.Name == ItemNames.BackstagePasses)
+            if (IsNormalProductPassed(item))
+                item.DecreaseQuantity();
+            
+            else if (item.IsProductSellByDatePassed(ItemNames.BackstagePasses))
                 item.Quality = 0;
 
-            if (item.IsProductSellByDatePassed() && item.Name == ItemNames.AgedBrie && item.Quality < _defaultMaxQuality)
+            else if (item.IsProductSellByDatePassed(ItemNames.AgedBrie) && HasValidQuantity(item))
                 item.IncreaseQuantity();
-
-            if (item.IsProductSellByDatePassed() && !item.IsSpecialProduct() && item.Quality > 0)
-                item.DecreaseQuantity();
         }
+        
+        private bool IsSpecialProductWithValidQuality(Item item) => item.IsSpecialProduct() && HasValidQuantity(item);
+        private bool IsValidBackstagePasses(Item item) => item.Name == ItemNames.BackstagePasses && HasValidQuantity(item);
+        private bool HasValidQuantity(Item item)=> item.Quality < _defaultMaxQuality;
+        private bool IsNormalProductPassed(Item item) => 
+            item.IsProductSellByDatePassed() && !item.IsSpecialProduct() && item.Quality > 0;
         
     }
 }
