@@ -2,18 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
+using GildedRoseKata.Extensions;
 using Xunit;
 
 namespace GildedRoseKata
 {
     public class GildedRose
     {
-        private readonly string[] _specialProducts = new string[]
-        {
-            ItemNames.AgedBrie,
-            ItemNames.BackstagePasses,
-            ItemNames.SulfurasHandOfRagnaros
-        };
+        private readonly int _defaultMaxQuality = 50;
+        private const int _daysBackstagePassesDecreaseByTwo = 11;
+        private readonly int _daysBackstagePassesDecreaseByThree = 6;
 
         IList<Item> Items;
         public GildedRose(IList<Item> Items)
@@ -23,39 +21,62 @@ namespace GildedRoseKata
 
         public void UpdateQuality()
         {
-            for (var i = 0; i < Items.Count; i++)
+            foreach (var item in Items)
             {
-                var isSpecialProduct = _specialProducts.Contains(Items[i].Name);
-                var isNormalProduct = !isSpecialProduct && Items[i].Quality > 0;
-                if (isNormalProduct)
-                    Items[i].Quality--;
-
-                var isSpecialProductWithGoodQuality = isSpecialProduct && Items[i].Quality < 50;
-                if (isSpecialProductWithGoodQuality)
-                    Items[i].Quality++;
-
-                var isValidBackstagePasses = Items[i].Name == "Backstage passes to a TAFKAL80ETC concert" && Items[i].Quality < 50;
-                if (isValidBackstagePasses && Items[i].SellIn < 11)
-                    Items[i].Quality++;
-                
-                if (isValidBackstagePasses && Items[i].SellIn < 6)
-                    Items[i].Quality++;
-                
-                if (Items[i].Name != "Sulfuras, Hand of Ragnaros")
-                    Items[i].SellIn--;
-
-                var isProductSellByDatePassed = Items[i].SellIn < 0;
-                if (isProductSellByDatePassed && Items[i].Name == "Backstage passes to a TAFKAL80ETC concert")
-                    Items[i].Quality = 0;
-
-                if (isProductSellByDatePassed && Items[i].Name == "Aged Brie" &&  Items[i].Quality < 50)
-                    Items[i].Quality++;
-            
-                if (isProductSellByDatePassed && !isSpecialProduct && Items[i].Quality > 0)
-                    Items[i].Quality--;
+                UpdateItem(item);
             }
         }
 
+        private void UpdateItem(Item item)
+        {
+            UpdateProductQuality(item);
 
+            if (!item.IsLegendaryProduct())
+                item.DecreaseSellIn();
+
+            UpdatePassedItem(item);
+        }
+
+        private void UpdateProductQuality(Item item)
+        {
+            if (item.IsNormalProduct())
+                item.DecreaseQuantity();
+
+            if (IsSpecialProductWithGoodQuality(item))
+                item.IncreaseQuantity();
+
+            UpdateBackstagePasses(item);
+        }
+
+        private bool IsSpecialProductWithGoodQuality(Item item)
+        {
+            return item.IsSpecialProduct() && item.Quality < _defaultMaxQuality;
+        }
+
+        private void UpdateBackstagePasses(Item item)
+        {
+            if (!IsValidBackstagePasses(item)) 
+                return;
+            
+            if(item.IsSellByDateWithLessThan(_daysBackstagePassesDecreaseByTwo))
+                item.IncreaseQuantity();
+
+            if (item.IsSellByDateWithLessThan(_daysBackstagePassesDecreaseByThree))
+                item.IncreaseQuantity();
+        }
+
+        private bool IsValidBackstagePasses(Item item) => item.Name == ItemNames.BackstagePasses && item.Quality < _defaultMaxQuality;
+        private void UpdatePassedItem(Item item)
+        {
+            if (item.IsProductSellByDatePassed() && item.Name == ItemNames.BackstagePasses)
+                item.Quality = 0;
+
+            if (item.IsProductSellByDatePassed() && item.Name == ItemNames.AgedBrie && item.Quality < _defaultMaxQuality)
+                item.IncreaseQuantity();
+
+            if (item.IsProductSellByDatePassed() && !item.IsSpecialProduct() && item.Quality > 0)
+                item.DecreaseQuantity();
+        }
+        
     }
 }
