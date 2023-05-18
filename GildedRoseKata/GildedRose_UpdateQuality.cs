@@ -149,6 +149,29 @@ namespace GildedRoseKata
             //Assert
             items.Should().NotContain(item => item.Quality>50);
         }
+        
+        [Fact]
+        public void GivenConjuredItem_QualityDegradeTwiceAsFastAsNormal()
+        {
+            //Arrange
+            var initialQuality = 50;
+            var firstItemExpectedValue = 48;
+            var secondItemExpectedValue = 46;
+            var items = new List<Item> {
+                new Item {Name = $"Conjured {ItemNames.AgedBrie}", SellIn = 10, Quality = initialQuality},
+                new Item {Name =  $"Conjured {ItemNames.BackstagePasses}", SellIn =0, Quality = initialQuality},
+            };
+
+            //Act
+            ExecuteUpdateQuality(items);
+
+            //Assert
+            var first = items.First();
+            var second = items.Last();
+            first.Quality.Should().Be(firstItemExpectedValue);
+            second.Quality.Should().Be(secondItemExpectedValue);
+        }
+
 
         #region PrivateMethods
 

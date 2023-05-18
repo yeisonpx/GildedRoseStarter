@@ -10,9 +10,14 @@ namespace GildedRoseKata
     public class GildedRose
     {
         private readonly int _defaultMaxQuality = 50;
-        private const int _daysBackstagePassesDecreaseByTwo = 11;
+        private readonly int _daysBackstagePassesDecreaseByTwo = 11;
         private readonly int _daysBackstagePassesDecreaseByThree = 6;
 
+        public const int DefaultNormalProductDecrease = 1;
+        public const int DefaultSellInDecrease = 1;
+        public const int DefaultNormalProductIncrease = 1;
+        public const int DefaultConjuredProductDecrease = DefaultNormalProductDecrease * 2;
+        
         IList<Item> Items;
         public GildedRose(IList<Item> Items)
         {
@@ -23,31 +28,31 @@ namespace GildedRoseKata
         {
             foreach (var item in Items)
             {
-               var updated = UpdateItem(item);
+               var updated = GetUpdatedItem(item);
                
                item.Quality = updated.Quality;
                item.SellIn = updated.SellIn;
             }
         }
 
-        private Item UpdateItem(Item item)
+        private Item GetUpdatedItem(Item item)
         {
             var updatedItem = item.Clone();
             UpdateProductQuality(updatedItem);
 
             if (!updatedItem.IsLegendaryProduct())
                 updatedItem.DecreaseSellIn();
-
-            UpdatePassedItem(updatedItem);
+            
+            if(updatedItem.IsProductSellByDatePassed())
+                UpdatePassedItem(updatedItem);
 
             return updatedItem;
         }
 
         private void UpdateProductQuality(Item item)
         {
-            if (item.IsNormalProduct())
-                item.DecreaseQuantity();
-
+            DecreaseProductQuality(item);
+            
             if (IsSpecialProductWithValidQuality(item))
                 item.IncreaseQuantity();
 
@@ -68,19 +73,25 @@ namespace GildedRoseKata
         
         private void UpdatePassedItem(Item item)
         {
-            if (IsNormalProductPassed(item))
-                item.DecreaseQuantity();
+            DecreaseProductQuality(item);
             
-            else if (item.IsProductSellByDatePassed(ItemNames.BackstagePasses))
+            if (item.IsProductSellByDatePassed(ItemNames.BackstagePasses))
                 item.Quality = 0;
 
-            else if (item.IsProductSellByDatePassed(ItemNames.AgedBrie) && HasValidQuantity(item))
+            else if (item.IsProductSellByDatePassed(ItemNames.AgedBrie) && HasValidQuality(item))
                 item.IncreaseQuantity();
         }
         
-        private bool IsSpecialProductWithValidQuality(Item item) => item.IsSpecialProduct() && HasValidQuantity(item);
-        private bool IsValidBackstagePasses(Item item) => item.Name == ItemNames.BackstagePasses && HasValidQuantity(item);
-        private bool HasValidQuantity(Item item)=> item.Quality < _defaultMaxQuality;
+        private void DecreaseProductQuality(Item item)
+        {
+            if (item.IsConjuredProduct())
+                item.DecreaseQuantity(DefaultConjuredProductDecrease);
+            else if (item.IsNormalProduct())
+                item.DecreaseQuantity();
+        }
+        private bool IsSpecialProductWithValidQuality(Item item) => item.IsSpecialProduct() && HasValidQuality(item);
+        private bool IsValidBackstagePasses(Item item) => item.Name == ItemNames.BackstagePasses && HasValidQuality(item);
+        private bool HasValidQuality(Item item)=> item.Quality < _defaultMaxQuality;
         private bool IsNormalProductPassed(Item item) => 
             item.IsProductSellByDatePassed() && !item.IsSpecialProduct() && item.Quality > 0;
         

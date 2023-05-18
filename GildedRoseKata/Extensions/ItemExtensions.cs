@@ -26,9 +26,9 @@ public static class ItemExtensions
 
     public static void Update(this Item item, Action<Item> action) => action(item);
 
-    public static void IncreaseQuantity(this Item item, int increase = 1) => item.Update(item => item.Quality = item.Quality + increase);
-    public static void DecreaseQuantity(this Item item, int decrease = 1) => item.Update(item => item.Quality = item.Quality - decrease);
-    public static void DecreaseSellIn(this Item item, int decrease = 1) => item.Update(item => item.SellIn = item.SellIn - decrease);
+    public static void IncreaseQuantity(this Item item, int increase = GildedRose.DefaultNormalProductIncrease) => item.Update(item => item.Quality = item.Quality + increase);
+    public static void DecreaseQuantity(this Item item, int decrease = GildedRose.DefaultNormalProductDecrease) => item.Update(item => item.Quality = item.Quality - decrease);
+    public static void DecreaseSellIn(this Item item, int decrease = GildedRose.DefaultSellInDecrease) => item.Update(item => item.SellIn = item.SellIn - decrease);
     
     public static bool IsSellByDateWithLessThan(this Item item, int days) =>  item.SellIn < days;
     public static bool IsProductSellByDatePassed(this Item item) => item.IsSellByDateWithLessThan(0);
@@ -39,5 +39,6 @@ public static class ItemExtensions
     public static bool IsSpecialProduct(this Item item) => _SpecialProducts.Contains(item.Name);
     public static bool IsLegendaryProduct(this Item item) => _LegendaryProducts.Contains(item.Name);
     public static bool IsNormalProduct(this Item item) => !item.IsSpecialProduct() && item.Quality > 0;
-    
+    public static bool IsConjuredProduct(this Item item) => item.Name.StartsWith("Conjured")  && item.Quality > 0;
+
 }

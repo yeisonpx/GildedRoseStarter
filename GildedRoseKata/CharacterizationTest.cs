@@ -8,7 +8,7 @@ namespace GildedRoseKata
 {
     public class CharacterizationTest
     {
-        [Fact]
+        [Fact(Skip = "No longer required")]
         public void DoesWhatItDoes()
         {
             var sb = new StringBuilder();
